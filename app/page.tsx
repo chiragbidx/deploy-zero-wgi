@@ -1,3 +1,5 @@
+"use client";
+
 import { AgentActionPanel } from "../components/AgentActionPanel";
 import React from "react";
 

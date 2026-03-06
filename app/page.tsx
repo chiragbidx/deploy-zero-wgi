@@ -1,6 +1,95 @@
 import { AgentActionPanel } from "../components/AgentActionPanel";
+import React from "react";
+
+// Server action for OpenAI doc generation
+async function generateDocumentation(formData: FormData) {
+  "use server";
+  const apiKey = process.env.OPENAI_API_KEY;
+  const featureInput = formData.get("featureDescription") as string;
+
+  if (!apiKey) {
+    return { error: "OPENAI_API_KEY not set on server.", result: null };
+  }
+  if (!featureInput || featureInput.length < 10) {
+    return { error: "Please enter a longer feature description.", result: null };
+  }
+
+  // Compose a clear prompt for AI documentation writing
+  const prompt = `
+You are a technical documentation writer for modern SaaS teams.
+
+Given this raw product/feature description, create a detailed, professional product documentation section.
+Format with markdown—headings, lists, and code where suitable.
+Be concise, developer-oriented, but not verbose. 
+Do not invent new functionality, but clarify and group key ideas.
+---
+Feature description:
+${featureInput}
+---
+Docs:
+`;
+
+  try {
+    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.4,
+        max_tokens: 800,
+        top_p: 1,
+      }),
+    });
+
+    if (!resp.ok) {
+      return { error: `OpenAI API error (${resp.status}): ${await resp.text()}`, result: null };
+    }
+    const data = await resp.json();
+    const generated = data.choices?.[0]?.message?.content?.trim() as string | undefined;
+    if (!generated) {
+      return { error: "Did not receive a valid response from OpenAI.", result: null };
+    }
+    return { error: null, result: generated };
+  } catch (e: any) {
+    return { error: "OpenAI connection failed. " + e.message, result: null };
+  }
+}
 
 export default function Home() {
+  // Client UI state managed via form+ref
+  const [pending, setPending] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [output, setOutput] = React.useState<string | null>(null);
+  const [copied, setCopied] = React.useState(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  async function onGenerate(formData: FormData) {
+    setOutput(null);
+    setError(null);
+    setPending(true);
+    setCopied(false);
+    const res = await generateDocumentation(formData);
+    if (res.error) setError(res.error);
+    if (res.result) setOutput(res.result);
+    setPending(false);
+  }
+
+  async function handleCopy() {
+    if (output) {
+      try {
+        await navigator.clipboard.writeText(output);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // ignore copy error
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 via-white to-[#ffe6d8] text-zinc-900">
       <main className="flex min-h-screen w-full flex-col gap-12 px-6 py-12 sm:px-10 lg:px-16 lg:max-w-[1600px] lg:mx-auto">
@@ -56,29 +145,69 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl border border-[#fb7232]/30 bg-white shadow-md">
+          <div className="relative overflow-hidden rounded-2xl border border-[#fb7232]/30 bg-white shadow-md flex flex-col justify-center">
             <div className="absolute inset-0 bg-gradient-to-br from-[#ffe7dd] via-white to-[#ffd9c6] opacity-70" aria-hidden />
-            <div className="relative grid gap-4 p-6 sm:grid-cols-2">
-              <div className="rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-[#fb7232]/20">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#fb7232]">AI Docs</p>
-                <p className="mt-2 text-base font-semibold text-[#4b1f0a]">Automatic section creation</p>
-                <p className="text-sm text-zinc-600">Paste any feature description, let DocuGenix generate your product docs in moments.</p>
-              </div>
-              <div className="rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-[#fb7232]/20">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#fb7232]">For Developers</p>
-                <p className="mt-2 text-base font-semibold text-[#4b1f0a]">Built for productivity</p>
-                <p className="text-sm text-zinc-600">No context switching—just enter, generate, and copy docs. Designed for busy product teams and startups.</p>
-              </div>
-              <div className="rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-[#fb7232]/20">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#fb7232]">Zero Setup</p>
-                <p className="mt-2 text-base font-semibold text-[#4b1f0a]">Instant SaaS starter</p>
-                <p className="text-sm text-zinc-600">Minimal Next.js stack, TypeScript, Docker & dev supervision out of the box.</p>
-              </div>
-              <div className="rounded-xl bg-white/80 p-4 shadow-sm ring-1 ring-[#fb7232]/20">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#fb7232]">Scalable</p>
-                <p className="mt-2 text-base font-semibold text-[#4b1f0a]">Ready to extend</p>
-                <p className="text-sm text-zinc-600">Layer in APIs, dashboard, or custom workflows as your product grows—keep your docs in sync.</p>
-              </div>
+            <div className="relative p-6 flex flex-col gap-3">
+              <form
+                ref={formRef}
+                className="space-y-3"
+                action={async (formData) => {
+                  onGenerate(formData);
+                }}
+              >
+                <label htmlFor="featureDescription" className="block text-sm font-semibold text-[#a9511c]">
+                  Try it now: Generate AI docs from any feature description
+                </label>
+                <textarea
+                  id="featureDescription"
+                  name="featureDescription"
+                  rows={5}
+                  placeholder="e.g. Allow users to sign in with Google. System should verify the Google account, create a new user if not present, and redirect to their dashboard."
+                  className="block w-full rounded-lg border border-[#fb7232]/30 bg-[#fffaf7] p-3 text-sm text-zinc-800 focus:border-[#fb7232] focus:ring-2 focus:ring-[#fb7232]/40"
+                  minLength={10}
+                  maxLength={1000}
+                  required
+                  disabled={pending}
+                />
+                <button
+                  type="submit"
+                  disabled={pending}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#fb7232] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e06225] hover:shadow-md disabled:bg-[#ffe7dd] disabled:text-[#fb7232] disabled:cursor-not-allowed"
+                >
+                  {pending ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12z"/>
+                      </svg>
+                      Generating...
+                    </>
+                  ) : (
+                    "Generate Docs"
+                  )}
+                </button>
+              </form>
+              {error && (
+                <div className="text-xs p-2 mt-1 rounded bg-[#ffe7dd] text-[#a53a0d] border border-[#fb7232]/20">{error}</div>
+              )}
+              {output && (
+                <div className="w-full mt-3 bg-[#fffaf7] border border-[#fb7232]/20 rounded-lg p-4 shadow-xs overflow-x-auto relative">
+                  <div className="absolute top-2 right-2">
+                    <button
+                      className="text-xs rounded px-2 py-1 bg-[#fb7232]/90 text-white font-semibold shadow hover:bg-[#c75829] transition"
+                      title="Copy to clipboard"
+                      onClick={handleCopy}
+                      type="button"
+                    >
+                      {copied ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  <pre className="whitespace-pre-wrap break-words text-sm text-zinc-800 font-mono">{output}</pre>
+                </div>
+              )}
+            </div>
+            <div className="relative mt-5 text-xs text-zinc-700 opacity-70">
+              Powered by OpenAI. Feature descriptions sent through the OpenAI API for doc generation. No data stored. Requires <span className="font-semibold">OPENAI_API_KEY</span> in server environment.
             </div>
           </div>
         </section>

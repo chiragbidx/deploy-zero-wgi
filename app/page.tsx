@@ -42,7 +42,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-wrap sm:gap-4 w-full">
               <a
-                href="#features"
+                href="#docugenix-features"
                 className="inline-flex w-full sm:w-auto items-center justify-center rounded-lg bg-[#fb7232] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#e06225] hover:shadow-md"
               >
                 Explore features
@@ -79,6 +79,52 @@ export default function Home() {
                 <p className="mt-2 text-base font-semibold text-[#4b1f0a]">Ready to extend</p>
                 <p className="text-sm text-zinc-600">Layer in APIs, dashboard, or custom workflows as your product grows—keep your docs in sync.</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="docugenix-features"
+          className="rounded-2xl border border-[#fb7232]/25 bg-white px-6 py-12 shadow-lg sm:px-10 mb-2"
+          aria-labelledby="docugenix-features-heading"
+        >
+          <h2
+            id="docugenix-features-heading"
+            className="mb-6 text-center text-2xl sm:text-3xl font-black tracking-tight text-[#fb7232]"
+          >
+            AI Document Writer Features
+          </h2>
+          <p className="mx-auto mb-8 max-w-2xl text-center text-zinc-700 text-base">
+            Powerful AI tools for instant, reliable product docs—made for modern developer teams and fast-moving startups.
+          </p>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-lg bg-[#fff7f1] border border-[#fb7232]/15 p-6 shadow-sm flex flex-col gap-2">
+              <h3 className="font-semibold text-lg text-[#3f1b08]">AI-powered product docs</h3>
+              <p className="text-sm text-zinc-700">Generate clear docs from any feature, spec, or user story using advanced language models.</p>
+            </div>
+            <div className="rounded-lg bg-[#fff7f1] border border-[#fb7232]/15 p-6 shadow-sm flex flex-col gap-2">
+              <h3 className="font-semibold text-lg text-[#3f1b08]">Automatic outlines & sections</h3>
+              <p className="text-sm text-zinc-700">Get detailed outlines, breakdowns, and separate documentation sections all from a single input.</p>
+            </div>
+            <div className="rounded-lg bg-[#fff7f1] border border-[#fb7232]/15 p-6 shadow-sm flex flex-col gap-2">
+              <h3 className="font-semibold text-lg text-[#3f1b08]">Smart formatting & markdown</h3>
+              <p className="text-sm text-zinc-700">Docs come formatted—headings, bullet points, and markdown ready for developer wikis or repos.</p>
+            </div>
+            <div className="rounded-lg bg-[#fff7f1] border border-[#fb7232]/15 p-6 shadow-sm flex flex-col gap-2">
+              <h3 className="font-semibold text-lg text-[#3f1b08]">Instant changelogs/usage guides</h3>
+              <p className="text-sm text-zinc-700">Quickly create sectioned changelogs and step-by-step usage guides for new releases or features.</p>
+            </div>
+            <div className="rounded-lg bg-[#fff7f1] border border-[#fb7232]/15 p-6 shadow-sm flex flex-col gap-2">
+              <h3 className="font-semibold text-lg text-[#3f1b08]">Works with any stack</h3>
+              <p className="text-sm text-zinc-700">No integrations required—use it for any tech, language, or project type.</p>
+            </div>
+            <div className="rounded-lg bg-[#fff7f1] border border-[#fb7232]/15 p-6 shadow-sm flex flex-col gap-2">
+              <h3 className="font-semibold text-lg text-[#3f1b08]">One-click copy/export</h3>
+              <p className="text-sm text-zinc-700">Copy output instantly or export to markdown for immediate integration into your workflow.</p>
+            </div>
+            <div className="rounded-lg bg-[#fff7f1] border border-[#fb7232]/15 p-6 shadow-sm flex flex-col gap-2">
+              <h3 className="font-semibold text-lg text-[#3f1b08]">Private by design</h3>
+              <p className="text-sm text-zinc-700">No data stored, no accounts needed—your ideas and docs stay confidential by default.</p>
             </div>
           </div>
         </section>
